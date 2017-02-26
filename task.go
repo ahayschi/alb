@@ -10,11 +10,6 @@ import (
 type Task struct {
 	ID   int
 	time float64
-	//Zone               int
-	//LineHeight         int
-	//ErgoRestriction    int
-	//StationRestriction int
-
 	predecessors map[int]*Task
 	assignment   *Station
 }

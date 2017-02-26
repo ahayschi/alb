@@ -147,6 +147,30 @@ func (l *Line) Tasks() []*Task {
 	return tasks
 }
 
+// FreeTasks returns all tasks without an assignment.
+func (l *Line) FreeTasks() []*Task {
+	var tasks []*Task
+	for _, task := range l.Tasks() {
+		if !task.IsAssigned() {
+			tasks = append(tasks, task)
+		}
+	}
+
+	return tasks
+}
+
+// AssignedTasks returns all tasks with an assignment.
+func (l *Line) AssignedTasks() []*Task {
+	var tasks []*Task
+	for _, task := range l.Tasks() {
+		if task.IsAssigned() {
+			tasks = append(tasks, task)
+		}
+	}
+
+	return tasks
+}
+
 // AddTask adds a task to the line.
 func (l *Line) AddTask(task *Task) error {
 	t := l.Task(task.ID)
@@ -175,6 +199,15 @@ func (l *Line) TaskTime() float64 {
 	var total float64
 	for _, task := range l.tasks {
 		total += task.Time()
+	}
+	return total
+}
+
+// StationTime calculates the total station time for all stations on the line.
+func (l *Line) StationTime() float64 {
+	var total float64
+	for _, station := range l.stations {
+		total += station.Time()
 	}
 	return total
 }

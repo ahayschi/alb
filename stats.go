@@ -16,7 +16,7 @@ func SmoothnessIndex(line *Line, time float64) float64 {
 		if !station.Active() {
 			continue
 		}
-		ttime := station.TaskTime()
+		ttime := station.Time()
 		idx += math.Pow(time-ttime, 2)
 	}
 	return math.Sqrt(idx)
@@ -37,4 +37,20 @@ func PrintStations(line *Line) {
 			fmt.Println(station)
 		}
 	}
+}
+
+func PrintFreeTasks(line *Line) {
+	var tasks string
+	for _, task := range line.FreeTasks() {
+		tasks += fmt.Sprintf("%d ", task.ID)
+	}
+	fmt.Printf("free_tasks=%s\n", tasks)
+}
+
+func PrintTaskVector(line *Line) {
+	var tasks string
+	for _, task := range line.AssignedTasks() {
+		tasks += fmt.Sprintf("%d ", task.Assignment().ID)
+	}
+	fmt.Printf("%s\n", tasks)
 }

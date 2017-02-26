@@ -27,7 +27,7 @@ func (s *Station) String() string {
 		tasks += fmt.Sprintf("%d ", task.ID)
 	}
 
-	str += fmt.Sprintf("Station %d:\tTaskTime %.2f\tTasks %s", s.ID, s.TaskTime(), tasks)
+	str += fmt.Sprintf("Station %d:\tTaskTime %.2f\tTasks %s", s.ID, s.Time(), tasks)
 	return str
 }
 
@@ -105,8 +105,8 @@ func (s *Station) WithdrawTasks() error {
 	return nil
 }
 
-// TaskTime returns the total task time of the tasks assigned to the station.
-func (s *Station) TaskTime() float64 {
+// Time returns the station time (total task time of the tasks assigned to the station).
+func (s *Station) Time() float64 {
 	var total float64
 	for _, task := range s.tasks {
 		total += task.Time()

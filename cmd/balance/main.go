@@ -26,9 +26,11 @@ func main() {
 	line.AddTasks(tasks)
 	line.AddStations(stations)
 
+	ValidateParams(params, line)
+
 	constraints := []alb.Constraint{
 		&alb.SingleTaskAssignment{},
-		&alb.RestrictedTaskTime{Time: params.CycleTime},
+		&alb.RestrictedStationTime{Time: params.CycleTime},
 		&alb.PredecessorsStartToStart{},
 	}
 	line.AddConstraints(constraints)
@@ -39,12 +41,7 @@ func main() {
 	}
 
 	alb.PrintMeasurements(line, params.CycleTime)
+	alb.PrintFreeTasks(line)
 	alb.PrintStations(line)
-
-	//var tasks string
-	//
-	//for _, task := range line.Tasks() {
-	//	tasks += fmt.Sprintf("%d ", task.Assignment().ID)
-	//}
-	//fmt.Println(tasks)
+	alb.PrintTaskVector(line)
 }

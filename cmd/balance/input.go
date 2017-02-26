@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/parallelworks/alb"
 )
 
@@ -150,4 +151,18 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 	}
 
 	return tasks, stations, nil
+}
+
+func ValidateParams(params *Params, line *alb.Line) {
+	for _, task := range line.Tasks() {
+		ttime := task.Time()
+		if ttime > params.CycleTime {
+			log.WithFields(log.Fields{
+				"task":       task.ID,
+				"task_time":  ttime,
+				"cycle_time": params.CycleTime,
+			}).Warnf("Cycle time is being bumped to task_time")
+			params.CycleTime = ttime
+		}
+	}
 }

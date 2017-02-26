@@ -18,12 +18,12 @@ func (c *SingleTaskAssignment) Valid(task *Task, station *Station) bool {
 	return !task.IsAssigned()
 }
 
-type RestrictedTaskTime struct {
+type RestrictedStationTime struct {
 	Time float64
 }
 
-func (c *RestrictedTaskTime) Valid(task *Task, station *Station) bool {
-	return task.Time()+station.TaskTime() <= c.Time
+func (c *RestrictedStationTime) Valid(task *Task, station *Station) bool {
+	return task.Time()+station.Time() <= c.Time
 }
 
 type PredecessorsStartToStart struct {
