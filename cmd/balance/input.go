@@ -101,16 +101,35 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 	tasks := make([]*alb.Task, nTasks)
 	stations := make([]*alb.Station, nTasks)
 	for i, t := range times {
-		taskTime, err := strconv.ParseFloat(t, 64)
+		parts := strings.Split(t, ",")
 		if err != nil {
-			return nil, nil, fmt.Errorf("parse: task time: line %d: %s", i+1, err)
+			return nil, nil, fmt.Errorf("parse: times: %s", err)
 		}
-
-		task := alb.NewTask(i+1, taskTime)
-		tasks[i] = task
+		if len(parts) == 2 {
+			taskId, err := strconv.Atoi(parts[0])
+			if err != nil {
+				return nil, nil, fmt.Errorf("parse: taskId: %s", err)
+			}
+			taskTime, err := strconv.ParseFloat(parts[1],64)
+			if err != nil {
+				return nil, nil, fmt.Errorf("parse: taskTime: %s", err)
+			}
+			task := alb.NewTask(taskId, taskTime)
+			tasks[i] = task
+		} else if len(parts) == 1 {
+			taskTime, err := strconv.ParseFloat(t, 64)
+			if err != nil {
+				return nil, nil, fmt.Errorf("parse: task time: line %d: %s", i+1, err)
+			}
+			task := alb.NewTask(i+1, taskTime)
+			tasks[i] = task
+		} else {
+			return nil, nil, fmt.Errorf("parse: preds: %s", err)
+		}
 
 		station := alb.NewStation(i + 1)
 		stations[i] = station
+		
 	}
 
 	for _, ids := range predIds {
@@ -141,7 +160,7 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 		if pred == nil {
 			return nil, nil, errors.New("parse: pred: attempting to assign an unknown task")
 		}
-
+		
 		task := taskById(taskId, tasks)
 		if task == nil {
 			return nil, nil, errors.New("parse pred: attempting to assign pred to unknown task")
