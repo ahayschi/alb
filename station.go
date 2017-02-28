@@ -3,20 +3,18 @@ package alb
 import (
 	"fmt"
 	"math"
-	"sort"
 )
 
 // Station is a place on an assembly line where tasks are performed.
 type Station struct {
 	ID    int
-	tasks map[int]*Task
+	tasks []*Task
 }
 
 // NewStation returns an initialized Station pointer.
 func NewStation(id int) *Station {
 	return &Station{
-		ID:    id,
-		tasks: make(map[int]*Task),
+		ID: id,
 	}
 }
 
@@ -39,25 +37,17 @@ func (s *Station) Active() bool {
 
 // Task returns a task by id.
 func (s *Station) Task(id int) *Task {
-	task, _ := s.tasks[id]
-	return task
+	for _, task := range s.tasks {
+		if task.ID == id {
+			return task
+		}
+	}
+	return nil
 }
 
-// Tasks returns an array of tasks assigned to the station, sorted by task ID.
+// Tasks returns an array of tasks assigned to the station, in order that they were assigned.
 func (s *Station) Tasks() []*Task {
-	var keys []int
-	for k := range s.tasks {
-		keys = append(keys, k)
-	}
-
-	sort.Ints(keys)
-
-	var tasks []*Task
-	for _, k := range keys {
-		tasks = append(tasks, s.tasks[k])
-	}
-
-	return tasks
+	return s.tasks
 }
 
 // Load returns the set of tasks assigned to the station.
@@ -77,24 +67,26 @@ func (s *Station) AssignTask(task *Task) error {
 		return fmt.Errorf("station already assigned task %d", task.ID)
 	}
 
-	s.tasks[task.ID] = task
+	s.tasks = append(s.tasks, task)
 	task.Assign(s)
 	return nil
 }
 
 // WithdrawTask removes a task from the station.
 func (s *Station) WithdrawTask(id int) error {
-	t := s.Task(id)
-	if t == nil {
-		return fmt.Errorf("station not currently assigned task %d", id)
+	tasks := s.tasks[:0]
+	for _, task := range s.tasks {
+		if task.ID != id {
+			tasks = append(tasks, task)
+			continue
+		}
+
+		err := task.Withdraw()
+		if err != nil {
+			return err
+		}
 	}
 
-	err := t.Withdraw()
-	if err != nil {
-		return err
-	}
-
-	delete(s.tasks, id)
 	return nil
 }
 
@@ -107,7 +99,7 @@ func (s *Station) WithdrawTasks() error {
 		}
 	}
 
-	s.tasks = make(map[int]*Task)
+	s.tasks = make([]*Task, 0)
 	return nil
 }
 
