@@ -6,11 +6,10 @@ BIN=./bin
 BALANCE_MAIN=./cmd/balance
 
 
-OUT=parallelworks-test-candidate
+mac:
+	env GOOS=darwin GOARCH=amd64 $(GOBUILD) -o $(BIN)/balance $(BALANCE_MAIN)
 
-all: build
-
-build:
+linux:
 	env GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BIN)/balance $(BALANCE_MAIN)
 
 test:

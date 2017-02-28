@@ -26,6 +26,14 @@ func (c *RestrictedStationTime) Valid(task *Task, station *Station) bool {
 	return task.Time()+station.Time() <= c.Time
 }
 
+type PacedLine struct {
+	Time float64
+}
+
+func (c *PacedLine) Valid(task *Task, station *Station) bool {
+	return task.Time() <= c.Time
+}
+
 type PredecessorsStartToStart struct {
 }
 

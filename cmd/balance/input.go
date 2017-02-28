@@ -110,7 +110,7 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 			if err != nil {
 				return nil, nil, fmt.Errorf("parse: taskId: %s", err)
 			}
-			taskTime, err := strconv.ParseFloat(parts[1],64)
+			taskTime, err := strconv.ParseFloat(parts[1], 64)
 			if err != nil {
 				return nil, nil, fmt.Errorf("parse: taskTime: %s", err)
 			}
@@ -129,7 +129,7 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 
 		station := alb.NewStation(i + 1)
 		stations[i] = station
-		
+
 	}
 
 	for _, ids := range predIds {
@@ -160,7 +160,7 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 		if pred == nil {
 			return nil, nil, errors.New("parse: pred: attempting to assign an unknown task")
 		}
-		
+
 		task := taskById(taskId, tasks)
 		if task == nil {
 			return nil, nil, errors.New("parse pred: attempting to assign pred to unknown task")
@@ -172,6 +172,7 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 	return tasks, stations, nil
 }
 
+// A hack to constrain the problem to always be valid for a paced line.
 func ValidateParams(params *Params, line *alb.Line) {
 	for _, task := range line.Tasks() {
 		ttime := task.Time()

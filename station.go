@@ -2,6 +2,7 @@ package alb
 
 import (
 	"fmt"
+	"math"
 	"sort"
 )
 
@@ -59,6 +60,11 @@ func (s *Station) Tasks() []*Task {
 	return tasks
 }
 
+// Load returns the set of tasks assigned to the station.
+func (s *Station) Load() []*Task {
+	return s.Tasks()
+}
+
 // NTasks returns the number of tasks assigned to the station.
 func (s *Station) NTasks() int {
 	return len(s.tasks)
@@ -105,11 +111,18 @@ func (s *Station) WithdrawTasks() error {
 	return nil
 }
 
-// Time returns the station time (total task time of the tasks assigned to the station).
+// Time returns the station time (total task time of the tasks assigned
+// to the station).
 func (s *Station) Time() float64 {
 	var total float64
 	for _, task := range s.tasks {
 		total += task.Time()
 	}
 	return total
+}
+
+// IdleTime returns the absolute difference between the given cycle time
+// and the station time.
+func (s *Station) IdleTime(time float64) float64 {
+	return math.Abs(time - s.Time())
 }

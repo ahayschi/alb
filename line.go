@@ -247,7 +247,7 @@ func (l *Line) ValidAssignment(taskID, stationID int) bool {
 // check that the assignment would not violate any of the line's constraints.
 func (l *Line) ValidAssignments(stationID int) []*Task {
 	var tasks []*Task
-	for _, task := range l.tasks {
+	for _, task := range l.Tasks() {
 		if l.ValidAssignment(task.ID, stationID) {
 			tasks = append(tasks, task)
 		}
@@ -255,8 +255,8 @@ func (l *Line) ValidAssignments(stationID int) []*Task {
 	return tasks
 }
 
-// Balance assigns tasks to stations on the line until all tasks have a
-// valid assignment. It uses the given heuristic function for deciding
+// Balance assigns tasks to stations on the line until all valid assignments
+// have been made. It uses the given heuristic function for deciding
 // the order in which tasks are assigned.
 func (l *Line) Balance(fn Heuristic) error {
 	for _, station := range l.Stations() {
