@@ -172,8 +172,14 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 	return tasks, stations, nil
 }
 
-// A hack to constrain the problem to always be valid for a paced line.
-func ValidateParams(params *Params, line *alb.Line) {
+// ValidateParams is a temporary hack to validate 2 conditions:
+// 	(1) Paced line
+//		If violated, we coerce the line to be valid and log a warning
+//
+//	(2) Global work < Global capacity
+//		If violated, we return an error.
+func ValidateParams(params *Params, line *alb.Line) error {
+	// Coerce to paced line
 	for _, task := range line.Tasks() {
 		ttime := task.Time()
 		if ttime > params.CycleTime {
@@ -185,4 +191,15 @@ func ValidateParams(params *Params, line *alb.Line) {
 			params.CycleTime = ttime
 		}
 	}
+
+	// Check global work and capacity
+	total := line.NStations()
+	globalWork := line.TaskTime()
+	globalWorkCapacity := float64(total) * params.CycleTime
+	if globalWork > globalWorkCapacity {
+		err := fmt.Sprintf("ss=%d, t=%f, tt=%f", total, params.CycleTime, globalWork)
+		return fmt.Errorf("validate: global work exceeds global capacity (%s)", err)
+	}
+
+	return nil
 }

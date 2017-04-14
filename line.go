@@ -102,6 +102,10 @@ func (l *Line) AddStations(stations []*Station) error {
 	return nil
 }
 
+func (l *Line) NStations() int {
+	return len(l.stations)
+}
+
 // ActiveStations returns all active stations on the line.
 func (l *Line) ActiveStations() []*Station {
 	var stations []*Station
@@ -157,6 +161,17 @@ func (l *Line) FreeTasks() []*Task {
 	}
 
 	return tasks
+}
+
+// NFreeTasks returns the number of tasks without an assignment.
+func (l *Line) NFreeTasks() int {
+	var n int
+	for _, task := range l.Tasks() {
+		if !task.IsAssigned() {
+			n++
+		}
+	}
+	return n
 }
 
 // AssignedTasks returns all tasks with an assignment.
@@ -255,13 +270,16 @@ func (l *Line) ValidAssignments(stationID int) []*Task {
 	return tasks
 }
 
-// Balance assigns tasks to stations on the line until all valid assignments
-// have been made. It uses the given heuristic function for deciding
-// the order in which tasks are assigned.
-func (l *Line) Balance(fn Heuristic) error {
+// BalanceByStationId assigns tasks to stations on the line until all valid
+// assignments have been made. It assigns tasks to the line's station by
+// iterating over the stations in order by their id. It uses the given
+// heuristic function to determine the order that valid tasks are assigned.
+func (l *Line) BalanceByStationId(fn Heuristic) error {
 	for _, station := range l.Stations() {
+		didProgress := false
 		candidates := l.ValidAssignments(station.ID)
 		for len(candidates) > 0 {
+			didProgress = true
 			best := fn(candidates)
 			err := station.AssignTask(best)
 			if err != nil {
@@ -270,7 +288,102 @@ func (l *Line) Balance(fn Heuristic) error {
 
 			candidates = l.ValidAssignments(station.ID)
 		}
+
+		if didProgress {
+			station.Activate()
+		}
 	}
 
 	return nil
+}
+
+// BalanceByShortestStationTime assigns tasks to stations on the line until
+// all valid assignments have been made. Instead of assigning tasks to the
+// line's stations in order, it continuously tries to make valid assignments
+// to the station with the shortest station time.
+//
+// NOTE: ValidateParams() must be called to use this balance method. See
+// note in code for further explanation.
+func (l *Line) BalanceByShortestStationTime(fn Heuristic) error {
+	for {
+		for {
+			didProgress := false
+			round := l.ActiveStations()
+			for len(round) > 0 {
+				var shortestIdx int
+				var shortest *Station
+				for i, station := range round {
+					if shortest == nil {
+						shortestIdx = i
+						shortest = station
+						continue
+					}
+
+					if station.Time() < shortest.Time() {
+						shortestIdx = i
+						shortest = station
+
+					}
+				}
+
+				candidates := l.ValidAssignments(shortest.ID)
+				if len(candidates) == 0 {
+					// Base Case:
+					// Shortest station in round has no valid assignments, so remove it
+					// from the round and continue on to next shortest.
+					copy(round[:shortestIdx], round[shortestIdx+1:])
+					round[len(round)-1] = nil
+					round = round[:len(round)-1]
+					continue
+				}
+
+				didProgress = true
+				best := fn(candidates)
+				err := shortest.AssignTask(best)
+				if err != nil {
+					return err
+				}
+			}
+
+			if !didProgress {
+				break
+			}
+		}
+
+		// Check to see if no progress was made in the last round because there
+		// are no free tasks remaining (we're done) or if another station needs
+		// to be activated to continue.
+		//
+		// NOTE: are we confident that when all stations are active and free
+		// tasks remain, that additional rounds will eventually assign all tasks?
+		//
+		// Intuitively, this seems to be the case when:
+		//
+		// If len(tasks) == len(total stations) and no one task time exceeds the
+		// line's cycle time (a paced line), then each station is assigned one
+		// task and the algorithm halts. ValidateParams() ensures that the line
+		// is paced.
+		//
+		// If len(tasks) > len(total stations), then it could be the case that
+		// not all tasks can be assigned to the line.  ValidateParams() ensures
+		// that the line's global capacity (n stations * cycle time) can hold
+		// the line's global work (total task time).
+		//
+		// If ValidateParams() is not called or its 2 checks are violated, this
+		// balance method could be unbounded.
+		if l.NFreeTasks() == 0 {
+			return nil
+		}
+
+		active, total := l.NActiveStations(), l.NStations()
+		if active < total {
+			for _, station := range l.Stations() {
+				if !station.Active() {
+					station.Activate()
+					break
+				}
+			}
+			continue
+		}
+	}
 }

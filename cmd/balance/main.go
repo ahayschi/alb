@@ -6,6 +6,8 @@ import (
 )
 
 func main() {
+	log.SetLevel(log.DebugLevel)
+
 	params, err := GetParams()
 	if err != nil {
 		log.Fatalf("balance: %s", err)
@@ -26,7 +28,10 @@ func main() {
 	line.AddTasks(tasks)
 	line.AddStations(stations)
 
-	ValidateParams(params, line)
+	err = ValidateParams(params, line)
+	if err != nil {
+		log.Fatalf("balance: %s", err)
+	}
 
 	constraints := []alb.Constraint{
 		&alb.SingleTaskAssignment{},
@@ -35,7 +40,9 @@ func main() {
 	}
 	line.AddConstraints(constraints)
 
-	err = line.Balance(alb.LongestTaskTime)
+	// Balance
+	err = line.BalanceByStationId(alb.LongestTaskTime)
+	//err = line.BalanceByShortestStationTime(alb.LongestTaskTime)
 	if err != nil {
 		log.Fatalf("balance: %s", err)
 	}

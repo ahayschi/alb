@@ -7,8 +7,9 @@ import (
 
 // Station is a place on an assembly line where tasks are performed.
 type Station struct {
-	ID    int
-	tasks []*Task
+	ID     int
+	tasks  []*Task
+	active bool
 }
 
 // NewStation returns an initialized Station pointer.
@@ -32,7 +33,16 @@ func (s *Station) String() string {
 
 // Active indicates whether the station is in use or not in use.
 func (s *Station) Active() bool {
-	return len(s.tasks) > 0
+	//return len(s.tasks) > 0
+	return s.active
+}
+
+func (s *Station) Activate() {
+	s.active = true
+}
+
+func (s *Station) Disable() {
+	s.active = false
 }
 
 // Task returns a task by id.
