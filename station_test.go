@@ -5,10 +5,7 @@ import "testing"
 func TestIsActive(t *testing.T) {
 	station1 := NewStation(1)
 	station2 := NewStation(2)
-
-	task1 := NewTask(1, 10.0)
-
-	station2.AssignTask(task1)
+	station2.Activate()
 
 	var tests = []struct {
 		station *Station

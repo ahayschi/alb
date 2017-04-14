@@ -17,6 +17,7 @@ func ShortestTaskTime(tasks []*Task) *Task {
 	return min
 }
 
+// Preferred
 func LongestTaskTime(tasks []*Task) *Task {
 	var max *Task
 	for _, task := range tasks {
@@ -32,6 +33,7 @@ func LongestTaskTime(tasks []*Task) *Task {
 	return max
 }
 
+// NOTE: Experimental, not tested
 func TimeOfSuccessors(task *Task, tasks []*Task) float64 {
 	total := task.Time()
 	for _, t := range tasks {
@@ -42,6 +44,7 @@ func TimeOfSuccessors(task *Task, tasks []*Task) float64 {
 	return total
 }
 
+// NOTE: Experimental, not tested
 func LongestSuccesssorTime(tasks []*Task) *Task {
 	var maxLength float64
 	var maxTask *Task
@@ -59,6 +62,7 @@ func LongestSuccesssorTime(tasks []*Task) *Task {
 	return maxTask
 }
 
+// NOTE: Experimental, not tested
 func ShortestSuccessorTime(tasks []*Task) *Task {
 	var minLength float64
 	var minTask *Task
@@ -86,6 +90,7 @@ func NSuccessors(task *Task, tasks []*Task) int {
 	return total
 }
 
+// NOTE: Experimental, not tested
 func MostSuccessors(tasks []*Task) *Task {
 	var maxLength int
 	var maxTask *Task
@@ -103,6 +108,7 @@ func MostSuccessors(tasks []*Task) *Task {
 	return maxTask
 }
 
+// NOTE: Experimental, not tested
 func LeastSuccessors(tasks []*Task) *Task {
 	var minLength int
 	var minTask *Task
