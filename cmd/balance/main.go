@@ -1,24 +1,34 @@
 package main
 
 import (
+	"flag"
+	"os"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/parallelworks/alb"
 )
 
 func main() {
+	var (
+		filename  = flag.String("file", "", "input in2 file")
+		cycleTime = flag.Float64("cycle", 60.0, "cycle time of line")
+		heuristic = flag.String("heuristic", "LongestTaskTime", "balancing heuristic")
+	)
+
+	flag.Parse()
 	log.SetLevel(log.DebugLevel)
 
-	params, err := GetParams()
+	if *filename == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	input, err := GetStream(*filename)
 	if err != nil {
 		log.Fatalf("balance: %s", err)
 	}
 
-	input, err := GetStream(params)
-	if err != nil {
-		log.Fatalf("balance: %s", err)
-	}
-
-	line := alb.NewLine(params.InputFile)
+	line := alb.NewLine(*filename)
 
 	tasks, stations, err := ParseIn2File(input)
 	if err != nil {
@@ -28,26 +38,26 @@ func main() {
 	line.AddTasks(tasks)
 	line.AddStations(stations)
 
-	err = ValidateParams(params, line)
+	ctime, err := ValidateLine(line, *cycleTime)
 	if err != nil {
 		log.Fatalf("balance: %s", err)
 	}
 
 	constraints := []alb.Constraint{
 		&alb.SingleTaskAssignment{},
-		&alb.RestrictedStationTime{Time: params.CycleTime},
+		&alb.RestrictedStationTime{Time: ctime},
 		&alb.PredecessorsStartToStart{},
 	}
 	line.AddConstraints(constraints)
 
 	// Balance
-	err = line.BalanceByStationId(alb.LongestTaskTime)
-	//err = line.BalanceByShortestStationTime(alb.LongestTaskTime)
+	h := stoh(*heuristic)
+	err = line.BalanceByStationId(h)
 	if err != nil {
 		log.Fatalf("balance: %s", err)
 	}
 
-	alb.PrintMeasurements(line, params.CycleTime)
+	alb.PrintMeasurements(line, ctime)
 	alb.PrintFreeTasks(line)
 	alb.PrintStations(line)
 	alb.PrintTaskVector(line)

@@ -13,42 +13,19 @@ import (
 	"github.com/parallelworks/alb"
 )
 
-type Params struct {
-	InputFile string
-	CycleTime float64
+var (
+	heuristicMap = map[string]alb.Heuristic{
+		"ShortestTaskTime": alb.ShortestTaskTime,
+		"LongestTaskTime":  alb.LongestTaskTime,
+	}
+)
+
+func stoh(heuristic string) alb.Heuristic {
+	return heuristicMap[heuristic]
 }
 
-func GetParams() (*Params, error) {
-	if len(os.Args) != 3 {
-		return nil, errors.New("params: two args required")
-	}
-
-	args := os.Args[1:]
-	p := &Params{InputFile: args[0]}
-	params := strings.Split(args[1], ",")
-
-	if len(params)%2 != 0 {
-		return nil, errors.New("params: requires both key and value")
-	}
-
-	for i := 0; i < len(params); i = i + 2 {
-		key := params[i]
-		value := params[i+1]
-
-		if key == "cycle_time" {
-			cycleTime, err := strconv.ParseFloat(value, 64)
-			if err != nil {
-				return nil, fmt.Errorf("params: parse cycle_time:  %s", err)
-			}
-			p.CycleTime = cycleTime
-		}
-	}
-
-	return p, nil
-}
-
-func GetStream(p *Params) (io.Reader, error) {
-	file, err := os.Open(p.InputFile)
+func GetStream(filename string) (io.Reader, error) {
+	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("stream: %s", err)
 	}
@@ -172,34 +149,36 @@ func ParseIn2File(in io.Reader) ([]*alb.Task, []*alb.Station, error) {
 	return tasks, stations, nil
 }
 
-// ValidateParams is a temporary hack to validate 2 conditions:
+// ValidateLine is a temporary hack to validate 2 conditions:
 // 	(1) Paced line
 //		If violated, we coerce the line to be valid and log a warning
 //
 //	(2) Global work < Global capacity
 //		If violated, we return an error.
-func ValidateParams(params *Params, line *alb.Line) error {
+func ValidateLine(line *alb.Line, cycleTime float64) (float64, error) {
+	validCycleTime := cycleTime
+
 	// Coerce to paced line
 	for _, task := range line.Tasks() {
 		ttime := task.Time()
-		if ttime > params.CycleTime {
+		if ttime > cycleTime {
 			log.WithFields(log.Fields{
 				"task":       task.ID,
 				"task_time":  ttime,
-				"cycle_time": params.CycleTime,
+				"cycle_time": cycleTime,
 			}).Warnf("Cycle time is being bumped to task_time")
-			params.CycleTime = ttime
+			validCycleTime = ttime
 		}
 	}
 
 	// Check global work and capacity
 	total := line.NStations()
 	globalWork := line.TaskTime()
-	globalWorkCapacity := float64(total) * params.CycleTime
+	globalWorkCapacity := float64(total) * validCycleTime
 	if globalWork > globalWorkCapacity {
-		err := fmt.Sprintf("ss=%d, t=%f, tt=%f", total, params.CycleTime, globalWork)
-		return fmt.Errorf("validate: global work exceeds global capacity (%s)", err)
+		err := fmt.Sprintf("ss=%d, t=%f, tt=%f", total, validCycleTime, globalWork)
+		return validCycleTime, fmt.Errorf("validate: global work exceeds global capacity (%s)", err)
 	}
 
-	return nil
+	return validCycleTime, nil
 }

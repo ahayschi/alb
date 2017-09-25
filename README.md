@@ -1,5 +1,5 @@
 # Assembly Line Balancing
-ALB is a library for constructing, manipulating, and balancing abstract assembly lines. In addition to the library, there is a supporting main command to construct a line from an .in2 file for balancing and stat logging.
+ALB is a library for constructing, manipulating, and balancing abstract assembly lines. In addition to the library, there is a supporting main command to construct a line from an in2 file for balancing and stat logging.
 
 #### Examples
 
@@ -7,11 +7,9 @@ Constructing a new line with tasks and stations:
 ```go
 package main
 
-
 import (
 	"github.com/parallelworks/alb"
 )
-
 
 func main() {
         line := alb.NewLine("Door Assembly North Region")
@@ -19,7 +17,7 @@ func main() {
                 alb.NewTask(1, 7.0),
         }
         line.AddTasks(tasks)
-        
+
         stations := []*alb.Station{
                 alb.NewStation(1),
         }
@@ -51,9 +49,9 @@ TODO
 
 #### Balancing
 
-ALB currently has two balancing methods: the first balances a line by iterating over a line's stations in order by Id, making task assignments. The second balances a line by making task assignments to the station with the shortest time at assignment. 
+ALB currently has two balancing methods: the first balances a line by iterating over a line's stations in order by Id, making task assignments. The second balances a line by making task assignments to the station with the shortest time at assignment.
 
-Whichever balance method you choose, you need to provide a heuristic for picking the task to assign from a set of valid tasks. I recommend you use either ```ShortestTaskTime``` or ```LongestTaskTime```, as they are the simplest to verify and test. LTT has shown to produce better results than STT.
+Whichever balance method you choose, you need to provide a heuristic for picking the task to assign from a set of valid tasks. I recommend you use either ```ShortestTaskTime``` or ```LongestTaskTime```, as they are the simplest to verify and test. LTT has been shown to produce better results than STT.
 
 ## Development
 Since this is currently a private repository, you will need to manually put it in the right place in your ```GOPATH```.
@@ -80,7 +78,5 @@ make test
 After building, run with the in2 file and the cycle time:
 
 ```bash
-./bin/balance specs/buxey.in2 cycle_time,37
+./bin/balance -file=specs/buxey.in2 -cycle=37
 ```
-
-
